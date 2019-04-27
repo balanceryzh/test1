@@ -1,0 +1,29 @@
+﻿        static int F1(int m)
+        {
+            int sum = 0;
+            bool flag = true;
+            for (int i = 1; i <= m; i++)
+            {
+                if (flag)  //一次是默认是True，下下也为True    
+                    sum += i;
+                else
+                    sum -= i;
+                flag = !flag;
+
+            }
+            return sum;
+        }
+
+        //方法二，通过奇偶性    
+        static int F2(int m)
+        {
+            int sum = 0;
+            for (int i = 1; i <= m; i++)
+            {
+                if (i % 2 > 0)  //即为奇数    
+                    sum += i;
+                else
+                    sum -= i;
+            }
+            return sum;
+        } 

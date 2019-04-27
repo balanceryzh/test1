@@ -1,0 +1,50 @@
+﻿ public static void selectsort(int[] array)
+        {
+
+            for (int i = array.Length-1; i > 0; i--)
+            {
+                int max = i;
+                int values = array[i];
+                for (int j = 0; j < i; j++)
+                {
+                    if (array[j] > array[max])
+                    {
+                        max = j;
+                    }
+                }
+                array[i] = array[max];
+                array[max] = values;
+
+            }
+
+            foreach (int i in array)
+            {
+                Console.Write("{0}\t", i);
+            }
+            Console.WriteLine();
+        }
+        public static void selectsort2(int[] array)
+        {
+
+            for (int i = 0; i <array.Length; i++)
+            {
+                int min = i;
+                int values = array[i];
+                for (int j = i; j < array.Length; j++)
+                {
+                    if (array[j] < array[min])
+                    {
+                        min = j;
+                    }
+                }
+                array[i] = array[min];
+                array[min] = values;
+
+            }
+
+            foreach (int i in array)
+            {
+                Console.Write("{0}\t", i);
+            }
+            Console.WriteLine();
+        }

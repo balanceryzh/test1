@@ -1,0 +1,3 @@
+<connectionStrings>
+    <add name="conn" connectionString="server=服务器名;database=数据库名;uid=用户名;password=密码" providerName="System.Data.SqlClient" />
+</connectionStrings>

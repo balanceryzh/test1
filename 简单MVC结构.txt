@@ -1,0 +1,224 @@
+﻿
+    #region 数据层还要记忆
+    public class EFContextFactory
+    {
+        public static DbContext GetDbContext()
+        {
+            DbContext dbcontext = CallContext.GetData("DbA") as DbContext;
+            if (dbcontext == null)
+            {
+                dbcontext = new FabrikamEntities();
+                CallContext.SetData("DbA", dbcontext);
+            }
+
+            return dbcontext;
+        }
+
+    }
+
+    public class Base<T> where T:class
+    {
+        private DbContext db = EFContextFactory.GetDbContext();
+
+
+        public T AddT(T entity)
+        {
+            db.Set<T>().Attach(entity);
+            db.Entry<T>(entity).State = EntityState.Added;
+            return entity;
+        }
+
+        public bool UpdateT(T entity)
+        {
+            db.Set<T>().Attach(entity);
+            db.Entry<T>(entity).State = EntityState.Modified;
+            return true;
+        }
+        public bool DelT(T entity)
+        {
+            db.Entry<T>(entity).State = EntityState.Deleted;
+            return true;
+        }
+
+        public IQueryable<T> Loads(Func<T, bool> wherelambda)
+        {
+            return db.Set<T>().Where<T>(wherelambda).AsQueryable();
+        }
+
+
+
+    }
+    #region 具体表
+    public class OrderRepository : Base<Orders>
+    {
+
+    }
+    public class TestTableRepository : Base<TestTable>
+    {
+
+    }
+
+    public class SpiderRepository:Base<SpiderList>
+    {
+
+    }
+
+    public class SelectTypeRepository : Base<SelectType>
+    {
+
+    }
+    #endregion
+
+    #endregion
+
+
+    #region 业务层
+
+    /// <summary>
+    /// 数据库交互会话，
+    /// 如果操作数据库的话直接从这里来操作
+    /// </summary>
+
+
+    public abstract class BaseService<T> where T : class, new()
+    {
+        public Base<T> CurrentRepository { get; set; }
+        public DbSession<T> _dbSession=DbSessonFactory<T>.GetCurrentDbSession();
+        public abstract void SetCurrentRepository();
+
+        public BaseService()
+        {
+            SetCurrentRepository();
+        }
+
+        public T Add(T entity)
+        {
+            var addEntity = CurrentRepository.AddT(entity);
+            _dbSession.SaveChanges();
+            return addEntity;
+        }
+
+        public bool Update(T entity)
+        {
+            var UpdateEntity = CurrentRepository.UpdateT(entity);
+            _dbSession.SaveChanges();
+            return UpdateEntity;
+        }
+
+        public bool Delete(T entity)
+        {
+            var deleteEntity = CurrentRepository.DelT(entity);
+            _dbSession.SaveChanges();
+            return deleteEntity;
+        }
+
+        public IQueryable<T> Load(Func<T,bool> wherelambda)
+        {
+            return CurrentRepository.Loads(wherelambda);
+        }
+
+
+
+    }
+    /// <summary>
+    /// 业务层提交
+    /// </summary>
+    public class DbSession<T>
+    {
+        public int SaveChanges()
+        {
+            return EFContextFactory.GetDbContext().SaveChanges();
+        }
+
+
+        public int ExcuteSql(string strSql)
+        {
+           
+            //params object[] objects = null;
+            return EFContextFactory.GetDbContext().Database.SqlQuery<int?>(strSql).Count();
+            //throw new NotImplementedException();
+        }
+
+
+        public List<T> ExcuteSql(string strSql, DbParameter[] parameters)
+        {
+
+            //params object[] objects = null;
+            return EFContextFactory.GetDbContext().Database.SqlQuery<T>(strSql).ToList();
+            //throw new NotImplementedException();
+        }
+
+        public List<string> ExcuteSqlString(string strSql, DbParameter[] parameters)
+        {
+
+            //params object[] objects = null;
+            return EFContextFactory.GetDbContext().Database.SqlQuery<string>(strSql).ToList();
+            //throw new NotImplementedException();
+        }
+
+        public List<int?> ExcuteSqlInt(string strSql, DbParameter[] parameters)
+        {
+
+            //params object[] objects = null;
+            return EFContextFactory.GetDbContext().Database.SqlQuery<int?>(strSql).ToList();
+            //throw new NotImplementedException();
+        }
+
+        public OrderRepository orderrepository { get { return new OrderRepository(); } }
+        public TestTableRepository testtablepository { get { return new TestTableRepository(); } }
+        public SpiderRepository spiderrepository { get { return new SpiderRepository(); } }
+
+        public SelectTypeRepository selecttypepository { get { return new SelectTypeRepository(); } }
+    }
+    public class OrdersInfo : BaseService<Orders>
+    {
+        public override void SetCurrentRepository()
+        {
+            CurrentRepository = _dbSession.orderrepository;
+        }
+    }
+    public class SpiderInfo:BaseService<SpiderList>
+    {
+        public override void SetCurrentRepository()
+        {
+            CurrentRepository = _dbSession.spiderrepository;
+        }
+    }
+
+    public class TestTableInfo : BaseService<TestTable>
+    {
+        public override void SetCurrentRepository()
+        {
+            CurrentRepository = _dbSession.testtablepository;
+        }
+    }
+
+    public class SelectTypeInfo:BaseService<SelectType>
+    {
+        public override void SetCurrentRepository()
+        {
+            CurrentRepository = _dbSession.selecttypepository;
+        }
+    }
+
+
+
+    public class DbSessonFactory<T>
+    {
+        public static DbSession<T> GetCurrentDbSession()
+        {
+            DbSession<T> _dbSession = CallContext.GetData("DBs") as DbSession<T>;
+            if(_dbSession==null)
+            {
+                _dbSession = new DbSession<T>();
+                CallContext.SetData("DBs", _dbSession);
+
+            }
+            return _dbSession;
+        }
+    }
+
+
+
+
+    #endregion

@@ -1,0 +1,234 @@
+﻿点击表格的th 列头 进行相应的排序
+
+////////////js
+
+function initMemberTable() {
+$('#memberTable').bootstrapTable('destroy');// 销毁表格数据
+$('#memberTable')
+.bootstrapTable(
+{
+columns : [
+{
+checkbox : true,
+align : 'center'
+},
+{
+field : 'member_id',
+title : 'id',
+align : 'center',
+sortable : true
+},
+{
+field : 'member_Uid',
+title : '会员id',
+align : 'center',
+sortable : true
+},
+{
+field : 'nickName',
+title : '昵称',
+align : 'center',
+sortable : true
+},
+{
+field : 'portrait',
+title : '头像',
+align : 'center',
+sortable : true,
+formatter : portrait
+},
+{
+field : 'sex',
+title : '性别',
+align : 'center',
+sortable : true
+},
+{
+field : 'loginType',
+title : '登陆方式',
+align : 'center',
+sortable : true
+},
+{
+field : 'signature',
+title : '个性签名',
+align : 'center',
+sortable : true
+},
+{
+field : 'thirdSign',
+title : '第三方标识',
+align : 'center',
+sortable : true
+},
+{
+field : 'yesnoAgreeChat',
+title : '是否同意私聊',
+align : 'center',
+sortable : true
+},
+{
+field : 'myAttention',
+title : '关注数',
+align : 'center',
+sortable : true
+},
+{
+field : 'myFans',
+title : '粉丝数',
+align : 'center',
+sortable : true
+},
+{
+field : 'startTime',
+title : '会员开始时间',
+align : 'center',
+sortable : true
+},
+{
+field : 'endTime',
+title : '会员结束时间',
+align : 'center',
+sortable : true
+},
+{
+field : 'registerTime',
+title : '注册时间',
+align : 'center',
+sortable : true
+},
+{
+field : 'minderMoney',
+title : '守护资费',
+align : 'center',
+sortable : true
+},
+{
+field : 'minderMoneyTime',
+title : '守护资费修改时间',
+align : 'center',
+sortable : true
+},
+{
+field : 'balance',
+title : '会员余额',
+align : 'center',
+sortable : true,
+formatter : function(value, row) {
+if (value > 0) {
+return "<button id=\"btn_cash_"
++ row.member_id
++ "\" type=\"button\" class=\"btn btn-info\" onclick=\"Charge('"
++ row.member_id
++ "','"
++ value
++ "','"
++ row
++ "',this);\"><span class=\"glyphicon \" aria-hidden=\"true\"></span>￥"
++ value + " 提现</button>";
+} else {
+return value;
+}
+
+
+}
+}, {
+field : 'memberType',
+title : '会员类型',
+align : 'center',
+sortable : true,
+formatter : memberTypeFormatter
+}, {
+field : 'lastLoginTime',
+title : '最后登陆时间',
+align : 'center',
+sortable : true
+} ],
+sortName : 'member_id',
+sortOrder : 'asc',
+pagination : true, // 分页
+sidePagination : 'server',
+pageNumber : 1,
+pageSize : 10,
+pageList : [ 10, 20, 50, 100 ],
+showColumns : true,
+checkboxHeader : false,
+clickToSelect : true,
+singleSelect:true,
+toolbar : "#toolbar",
+singleSelect : false,
+search:true,
+queryParamsType : 'limit',
+queryParams : function(params) {
+return {
+pageSize : params.limit,
+rowoffset : params.offset,
+keyword:params.search,//搜索
+sortOrder: params.order,//排序
+          sortName:params.sort//排序字段
+}
+},
+onDblClickRow : function(row, $element) {
+editMemberInfoShow(row, $element);
+},
+url : './member/initMemberInfoCon'
+});
+$('#memberTable').bootstrapTable('hideColumn', 'portrait');
+$('#memberTable').bootstrapTable('hideColumn', 'thirdSign');//隐藏 字段
+$('#memberTable').bootstrapTable('hideColumn', 'startTime');
+$('#memberTable').bootstrapTable('hideColumn', 'endTime');
+$('#memberTable').bootstrapTable('hideColumn', 'minderMoney');
+$('#memberTable').bootstrapTable('hideColumn', 'minderMoneyTime');
+$('#memberTable').bootstrapTable('hideColumn', 'yesnoAgreeChat');
+$('#memberTable').bootstrapTable('hideColumn', 'member_id');
+}
+
+////////////////////controller
+
+public void initMemberInfoCon() {
+String pagesize=this.getPara("pageSize");
+String keyword = this.getPara("keyword");
+int offset = Integer.valueOf(this.getPara("rowoffset"));
+    int size = (offset/Integer.valueOf(pagesize))+1;
+    String pagenum = String.valueOf(size);
+    
+    // 排序方式
+String order = this.getPara("sortOrder");
+// 排序字段
+String sortname = this.getPara("sortName");
+    
+Page<Member> obj=Member.dao.queryPage(pagenum, pagesize,keyword,order,sortname);
+
+if(obj==null){
+this.setAttr("state", "FAILED");
+this.setAttr("msg", "加载Member表格数据失败！");
+this.renderJson();
+return;
+}else{
+this.setAttr("total",obj.getTotalRow());
+this.setAttr("rows", obj.getList());
+this.renderJson();
+return;
+}
+}
+
+///////////model
+
+public Page<Member> queryPage(String pagenum, String pagesize, String keyword,String order,String sortname) {
+try {
+String sql = "select *,showMemberType(startTime,endTime,memberType) as vipstate ";
+String sqlExceptSelect = "from tb_member ";
+if(keyword != null && !keyword.equals(""))
+{
+   String tmpStr = " where member_Uid like '%"+keyword+"%' or "
+           + "nickName like '%"+keyword+"%' or "
+           + "memberType like '%"+keyword+"%'";
+   sqlExceptSelect +=  tmpStr;
+}
+sqlExceptSelect+=" ORDER BY "+sortname+" "+order;
+return dao.paginate(Integer.parseInt(pagenum), Integer.parseInt(pagesize), sql, sqlExceptSelect); 
+} catch (Exception e) {
+e.printStackTrace();
+return null;
+}
+}

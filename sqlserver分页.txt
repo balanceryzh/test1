@@ -1,0 +1,15 @@
+sqlserver分页
+第二种方式：offset fetch next方式（SQL2012以上的版本才支持：推荐使用 ）
+
+select * from ArtistModels  order by ArtistId offset 4 rows fetch next 5 rows only
+
+第一种：ROW_NUMBER() OVER()方式
+
+select * from ( 
+　　　　select *, ROW_NUMBER() OVER(Order by ArtistId ) AS RowId from ArtistModels 
+　　) as b
+
+      where RowId between 10 and 20 
+第三种方式：--top not in方式 （适应于数据库2012以下的版本）	  
+select top 3 * from ArtistModels 
+where ArtistId not in (select top 15 ArtistId from ArtistModels)

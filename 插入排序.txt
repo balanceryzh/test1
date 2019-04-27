@@ -1,0 +1,23 @@
+﻿  public static void insersort(int[] array)
+        {
+            for (int i = 1; i < array.Length; i++)
+            {
+
+
+                for (int j = 0; j < i; j++)
+                {
+                    int temp = array[i];
+                    if (array[j] > array[i])
+                    {
+                        array[i] = array[j];
+                        array[j] = temp;
+                    }
+                }
+
+            }
+            foreach (int i in array)
+            {
+                Console.Write("{0}\t", i);
+            }
+            Console.WriteLine();
+        }

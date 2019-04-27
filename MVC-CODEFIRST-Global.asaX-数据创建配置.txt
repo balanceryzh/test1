@@ -1,0 +1,10 @@
+﻿                    public DottextContext():base("name=连接字符串名")
+					{
+
+					}
+			
+			
+			using (var dottextContext = new DottextContext())
+            {
+                bool res = dottextContext.Database.CreateIfNotExists();
+            }
